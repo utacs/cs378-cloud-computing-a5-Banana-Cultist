@@ -1,12 +1,10 @@
-package edu.cs.utexas.HadoopEx;
-
-import java.io.IOException;
+package edu.cs.utexas.HadoopEx.Task1;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -15,7 +13,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-public class WordCount extends Configured implements Tool {
+import java.io.IOException;
+
+public class HourErrorDriver extends Configured implements Tool {
 
 	/**
 	 * 
@@ -24,7 +24,7 @@ public class WordCount extends Configured implements Tool {
 	 */
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new WordCount(), args);
+		int res = ToolRunner.run(new Configuration(), new HourErrorDriver(), args);
 		System.exit(res);
 	}
 
@@ -35,18 +35,18 @@ public class WordCount extends Configured implements Tool {
 		try {
 			Configuration conf = new Configuration();
 
-			Job job = new Job(conf, "WordCount");
-			job.setJarByClass(WordCount.class);
+			Job job = new Job(conf, "HourError");
+			job.setJarByClass(HourErrorDriver.class);
 
 			// specify a Mapper
-			job.setMapperClass(WordCountMapper.class);
+			job.setMapperClass(HourErrorMapper.class);
 
 			// specify a Reducer
-			job.setReducerClass(WordCountReducer.class);
+			job.setReducerClass(HourErrorReducer.class);
 
 			// specify output types
-			job.setOutputKeyClass(Text.class);
-			job.setOutputValueClass(IntWritable.class);
+			job.setOutputKeyClass(IntWritable.class);
+			job.setOutputValueClass(LongWritable.class);
 
 			// specify input and output directories
 			FileInputFormat.addInputPath(job, new Path(args[0]));
