@@ -38,10 +38,24 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			double m;
 			double b;
 
-			m = (sums[4]*sums[2]-sums[0]*sums[1])/(sums[4]*sums[3] - sums[3]*sums[3]);
-			b = (sums[3]*sums[1]-sums[0]*sums[2])/(sums[4]*sums[3] - sums[3]*sums[3]);
+			/*
+			context.write(new IntWritable(0), new FloatWritable(x));
+			context.write(new IntWritable(1), new FloatWritable(y));
+			context.write(new IntWritable(2), new FloatWritable(x * y));
+			context.write(new IntWritable(3), new FloatWritable(x * x));
+			context.write(new IntWritable(4), new FloatWritable(1));
+			*/
+
+			m = (sums[4]*sums[2] - sums[0]*sums[1]) / (sums[4]*sums[3] - sums[0]*sums[0]);
+			b = (sums[3]*sums[1] - sums[0]*sums[2]) / (sums[4]*sums[3] - sums[0]*sums[0]);
 		
-			System.out.printf("Parameters:\n\tm: %f\n\tb: %f\n", m, b);
+			File results = new File(args[1] + "/" + args[2]);
+			PrintWriter pw = new PrintWriter(results);
+
+			pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));
+
+			pw.close();
+			br.close();
 		}
 
 		System.exit(res);

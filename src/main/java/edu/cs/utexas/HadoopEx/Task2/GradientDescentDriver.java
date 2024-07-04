@@ -36,7 +36,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 		try {
 			Configuration conf = new Configuration();
 			int max_iters = 100;
-			int num_iter = 0;
+			int num_iter = 1;
 			double learning_rate = 0.001;
 
 			Parameters.initializeParameters(2, learning_rate);
@@ -64,22 +64,11 @@ public class GradientDescentDriver extends Configured implements Tool {
 				FileInputFormat.addInputPath(job, new Path(args[0]));
 				job.setInputFormatClass(TextInputFormat.class);
 				
-				job.waitForCompletion(true);
-
-				Job job2 = Job.getInstance(conf, "CostCalculation");
-    			job2.setJarByClass(GradientDescentDriver.class);
-
-				job2.setMapperClass(CostMapper.class);
-				job2.setReducerClass(CostReducer.class);
-
-				job2.setNumReduceTasks(1);
-
-				job2.setOutputKeyClass(IntWritable.class);
-				job2.setOutputValueClass(DoubleWritable.class);
-				
-				FileInputFormat.addInputPath(job2, new Path(args[0]));
-				job2.setInputFormatClass(TextInputFormat.class);
-				job2.waitForCompletion(true);
+				Path outPath = new Path(args[1] + '/' + num_iter);
+				FileOutputFormat.setOutputPath(job, outPath);
+				job.setOutputFormatClass(TextOutputFormat.class);
+				job.waitForCompletion(false);
+				//deleteOutputDirectory(args[1], job);
 				System.out.println("Iteration: " + num_iter);
 				num_iter++;
 			}
@@ -98,4 +87,11 @@ public class GradientDescentDriver extends Configured implements Tool {
 			return 2;
 		}
 	}
+
+	private static void deleteOutputDirectory(String directory, Job job) throws IOException {
+		Path dirPath = new Path(directory);
+		FileSystem fs = FileSystem.get(dirPath.toUri(), job.getConfiguration());
+		fs.delete(dirPath, true);
+	}
 }
+

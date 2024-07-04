@@ -22,7 +22,7 @@ public class CostReducer extends  Reducer<IntWritable, DoubleWritable, IntWritab
         double b = parameters.get(1);
         System.out.println("Cost: " + sum_cost);
         System.out.println("Slope: " + m + ", y-intercept: " + b);
-        //context.write(index, new DoubleWritable(sum_cost));
+        context.write(index, new DoubleWritable(sum_cost));
     }
 
 }

@@ -1,6 +1,6 @@
 package edu.cs.utexas.HadoopEx.Task3;
 
-import edu.cs.utexas.HadoopEx.Task2.TaxiErrorDriver;
+//import edu.cs.utexas.HadoopEx.Task2.TaxiErrorDriver;
 import edu.cs.utexas.HadoopEx.TopKMapper;
 import edu.cs.utexas.HadoopEx.TopKReducer;
 import org.apache.hadoop.conf.Configuration;
@@ -72,7 +72,7 @@ public class DriverEarningsDriver extends Configured implements Tool {
                 return 1;
             }
             Job job2 = new Job(conf, "TopDriverEarnings");
-            job2.setJarByClass(TaxiErrorDriver.class);
+            job2.setJarByClass(DriverEarningsDriver.class);
 
             // specify a Mapper
             TopKMapper.K = 10;

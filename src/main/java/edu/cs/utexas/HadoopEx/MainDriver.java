@@ -13,9 +13,9 @@ public class MainDriver extends Configured implements Tool{
     public static void main(String[] args) throws Exception {
         int res = 0;
         if (args[1].equals("Task1")) {
-            res = ToolRunner.run(new Configuration(), new LinearRegressionDriver(), new String[] {args[0], args[2]});
+            LinearRegressionDriver.main(new String[] {args[0], args[2], args[3]});
         } else if (args[1].equals("Task2")) {
-            res = ToolRunner.run(new Configuration(), new GradientDescentDriver(), new String[] {args[0], args[2], args[3]});
+            res = ToolRunner.run(new Configuration(), new GradientDescentDriver(), new String[] {args[0], args[2]});
         } else if (args[1].equals("Task3")) {
             res = ToolRunner.run(new Configuration(), new DriverEarningsDriver(), new String[] {args[0], args[2], args[3]});
         } else if (args[1].equals("AllTasks")) {

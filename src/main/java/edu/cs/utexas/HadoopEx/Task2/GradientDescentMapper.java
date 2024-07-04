@@ -29,6 +29,12 @@ public class GradientDescentMapper extends Mapper<Object, Text, IntWritable, Dou
 
 			//b
 			context.write(new IntWritable(1), new DoubleWritable(partial_b));
+
+			// calculate cost
+			Double cost = Math.pow((y - (m * x + b)), 2);
+
+			// write cost to index 2
+			context.write(new IntWritable(2), new DoubleWritable(cost));
 		}
 	}
 }
