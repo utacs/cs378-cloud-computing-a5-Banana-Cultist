@@ -13,6 +13,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 
@@ -32,66 +38,96 @@ public class GradientDescentDriver extends Configured implements Tool {
 	/**
 	 * 
 	 */
-	public int run(String args[]) {
-		try {
-			Configuration conf = new Configuration();
-			int max_iters = 100;
-			int num_iter = 1;
-			double learning_rate = 0.001;
+	public int run(String args[]) throws Exception {
+		Configuration conf = new Configuration();
+		conf.set("m", "0");
+		conf.set("b", "0");
 
-			Parameters.initializeParameters(2, learning_rate);
+		File results = null;
+		BufferedWriter bw = null;
 
-			while (num_iter < max_iters) {
+		int max_iters = 100;
+		int num_iter = 1;
+		double learning_rate = 0.001;
 
-				// Reset job configurations for each iteration
-				Job job = Job.getInstance(conf, "GradientDescent");
-				job.setJarByClass(GradientDescentDriver.class);
+		while (num_iter < max_iters) {
+			// Reset job configurations for each iteration
+			Job job = Job.getInstance(conf, "GradientDescent");
 
-				// specify a Mapper
-				job.setMapperClass(GradientDescentMapper.class);
+			job.setJarByClass(GradientDescentDriver.class);
 
-				// specify a Reducer
-				job.setReducerClass(GradientDescentReducer.class);
+			// specify a Mapper
+			job.setMapperClass(GradientDescentMapper.class);
 
-				// specify output types
-				job.setOutputKeyClass(IntWritable.class);
-				job.setOutputValueClass(DoubleWritable.class);
+			// specify a Reducer
+			job.setReducerClass(GradientDescentReducer.class);
 
-				job.setMapOutputKeyClass(IntWritable.class);
-				job.setMapOutputValueClass(DoubleWritable.class);
+			// specify output types
+			job.setOutputKeyClass(IntWritable.class);
+			job.setOutputValueClass(DoubleWritable.class);
 
-				// specify input and output directories
-				FileInputFormat.addInputPath(job, new Path(args[0]));
-				job.setInputFormatClass(TextInputFormat.class);
-				
-				Path outPath = new Path(args[1] + '/' + num_iter);
-				FileOutputFormat.setOutputPath(job, outPath);
-				job.setOutputFormatClass(TextOutputFormat.class);
-				job.waitForCompletion(false);
-				//deleteOutputDirectory(args[1], job);
-				System.out.println("Iteration: " + num_iter);
-				num_iter++;
+			// specify input and output directories
+			FileInputFormat.addInputPath(job, new Path(args[0]));
+			job.setInputFormatClass(TextInputFormat.class);
+
+			Path outPath = new Path(args[1] + '/' + num_iter);
+			FileOutputFormat.setOutputPath(job, outPath);
+			job.setOutputFormatClass(TextOutputFormat.class);
+			job.waitForCompletion(false);
+
+			// read job output
+			File output = new File(outPath + "/part-r-00000");
+			BufferedReader br = new BufferedReader(new FileReader(output));
+			String line = br.readLine();
+			double cost = 0, m = 0, b = 0;
+			while (line != null) {
+				String[] split = line.split("\t");
+				double parsed = Double.parseDouble(split[1]);
+				switch(split[0]) {
+					case "0":
+						m = parsed;
+						break;
+					case "1":
+						b = parsed;
+						break;
+					case "2":
+						cost = parsed;
+						break;
+				}
+
+				line = br.readLine();
 			}
-			// // delete previous output
-			// Path outputPathMid = new Path(args[1]);
-			// FileSystem fs = FileSystem.get(outputPathMid.toUri(), job.getConfiguration());
-			// fs.delete(outputPathMid, true);
+			br.close();
 
-			// FileOutputFormat.setOutputPath(job, outputPathMid);
-			// job.setOutputFormatClass(TextOutputFormat.class);
-			return 1;
+			// calculate new parameters on learning rate
+			m = Double.parseDouble(conf.get("m")) - learning_rate * m;
+			b = Double.parseDouble(conf.get("b")) - learning_rate * b;
 
-		} catch (InterruptedException | ClassNotFoundException | IOException e) {
-			System.err.println("Error during mapreduce job.");
-			e.printStackTrace();
-			return 2;
+			// update parameters
+			conf.set("m", "" + m);
+			conf.set("b", "" + b);
+
+			// write to output file
+			String writeOutput = String.format("Cost: %f\n\tm: %f\n\tb: %f\n", cost, m, b);
+
+			if (bw == null) {
+				results = new File(args[1] + "/" + args[2]);
+				bw = new BufferedWriter(new FileWriter(results));
+			}
+
+			bw.write(writeOutput);
+			bw.flush();
+
+			// delete output directory (for cleanliness)
+			FileSystem.get(outPath.toUri(), job.getConfiguration()).delete(outPath, true);
+
+			System.out.println("Iteration: " + num_iter);
+			System.out.println(writeOutput);
+			num_iter++;
 		}
-	}
 
-	private static void deleteOutputDirectory(String directory, Job job) throws IOException {
-		Path dirPath = new Path(directory);
-		FileSystem fs = FileSystem.get(dirPath.toUri(), job.getConfiguration());
-		fs.delete(dirPath, true);
+		bw.close();
+		return 1;
 	}
 }
 
