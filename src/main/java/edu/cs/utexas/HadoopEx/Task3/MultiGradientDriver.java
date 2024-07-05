@@ -39,6 +39,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 	 */
 	public int run(String args[]) throws Exception {
 		Configuration conf = new Configuration();
+		MultiGradientVector params = new MultiGradientVector(0.1f);
 		conf.set("m0", "0.1");
         conf.set("m1", "0.1");
         conf.set("m2", "0.1");
