@@ -2,15 +2,23 @@
 
 ## Team members' names 
 
-1. Student Name:
+1. Student Name: Aadit Barua
 
-   Student UT EID:
+   Student UT EID: ab68445
 
-2. Student Name:
+2. Student Name: Daniel Lim
 
-   Student UT EID:
+   Student UT EID: dwl667
 
- ...
+3. Student Name: Bruce Fan
+
+   Student UT EID: bxf64
+
+4. Student Name: Kous Nyshadham
+
+   Student UT EID: kn8794
+
+
 
 ##  Course Name: CS378 - Cloud Computing 
 

@@ -52,7 +52,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 		double prev_cost = -1.0;
 		boolean terminate = false;
 
-		while (!terminate && num_iter < max_iters) {
+		while (num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "GradientDescent");
 
@@ -102,7 +102,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			br.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
-				learning_rate = learning_rate/2.0;
+				learning_rate = learning_rate/5.0;
 			} else if (cost < prev_cost) {
 				learning_rate = learning_rate * 1.25;
 			}
@@ -133,7 +133,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			terminate = MultiGradientDriver.checkTerminate(new double[]{new_m, new_b}, new double[]{m, b});
+			//terminate = MultiGradientDriver.checkTerminate(new double[]{new_m, new_b}, new double[]{m, b});
 		}
 
 		bw.close();

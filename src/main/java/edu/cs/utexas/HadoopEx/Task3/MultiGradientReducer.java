@@ -17,7 +17,7 @@ public class MultiGradientReducer extends  Reducer<IntWritable, DoubleWritable, 
             N++;
         }
 
-        if (index.get() < 5) {
+        if (index.get() < MultiGradientVector.DEPENDENTS) {
             sum = 2 * sum / N;
         }
         context.write(index, new DoubleWritable(sum));

@@ -16,41 +16,21 @@ public class MultiGradientMapper extends Mapper<Object, Text, IntWritable, Doubl
 		String[] columns = value.toString().split(",");
 		if (this.clean(columns)) {
 			//change from duration-in-seconds to duration-in-minutes
-			Float x0 = Float.parseFloat(columns[4])/60;
-            Float x1 = Float.parseFloat(columns[5]);
-            Float x2 = Float.parseFloat(columns[11]);
-            Float x3 = Float.parseFloat(columns[15]);
-			Float y = Float.parseFloat(columns[16]);
+			double[] inputs = new double[MultiGradientVector.DEPENDENTS];
+			
+
+			inputs[0] = Double.parseDouble(columns[4]) / 60;
+            inputs[1] = Double.parseDouble(columns[5]);
+            inputs[2] = Double.parseDouble(columns[11]);
+            inputs[3] = Double.parseDouble(columns[15]);
+
+			inputs[4] = Double.parseDouble(columns[16]); // y
 
 			Configuration conf = context.getConfiguration();
 
+			MultiGradientVector params = new MultiGradientVector(conf);
 
-			Double m0 = Double.parseDouble(conf.get("m0"));
-            Double m1 = Double.parseDouble(conf.get("m1"));
-            Double m2 = Double.parseDouble(conf.get("m2"));
-            Double m3 = Double.parseDouble(conf.get("m3"));
-			Double b = Double.parseDouble(conf.get("b"));
-
-			Double partial_m0 = -x0 * (y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b));
-            Double partial_m1 = -x1 * (y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b));
-            Double partial_m2 = -x2 * (y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b));
-            Double partial_m3 = -x3 * (y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b));
-			Double partial_b = -1 * (y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b));
-
-			// m0-4
-			context.write(new IntWritable(0), new DoubleWritable(partial_m0));
-			context.write(new IntWritable(1), new DoubleWritable(partial_m1));
-			context.write(new IntWritable(2), new DoubleWritable(partial_m2));
-			context.write(new IntWritable(3), new DoubleWritable(partial_m3));
-
-			//b
-			context.write(new IntWritable(4), new DoubleWritable(partial_b));
-
-			// calculate cost
-			Double cost = Math.pow((y - ((m0 * x0) + (m1 * x1) + (m2 * x2) + (m3 * x3) + b)), 2);
-
-			// write cost to index 5
-			context.write(new IntWritable(5), new DoubleWritable(cost));
+			params.writePartialsCost(context, inputs);
 		}
 	}
 

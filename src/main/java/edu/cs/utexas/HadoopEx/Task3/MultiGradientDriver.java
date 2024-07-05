@@ -39,12 +39,8 @@ public class MultiGradientDriver extends Configured implements Tool {
 	 */
 	public int run(String args[]) throws Exception {
 		Configuration conf = new Configuration();
-		MultiGradientVector params = new MultiGradientVector(0.1f);
-		conf.set("m0", "0.1");
-        conf.set("m1", "0.1");
-        conf.set("m2", "0.1");
-        conf.set("m3", "0.1");
-		conf.set("b", "0.1");
+		MultiGradientVector params = new MultiGradientVector(0.1);
+		params.writeToConfiguration(conf);
 
 		File results = null;
 		BufferedWriter bw = null;
@@ -53,9 +49,9 @@ public class MultiGradientDriver extends Configured implements Tool {
 		int num_iter = 1;
 		double learning_rate = 0.001;
 		double prev_cost = -1.0;
-		boolean terminate = false;
+		//boolean terminate = false;
 
-		while (!terminate && num_iter < max_iters) {
+		while (num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "MultiGradient");
 
@@ -84,27 +80,15 @@ public class MultiGradientDriver extends Configured implements Tool {
 			File output = new File(outPath + "/part-r-00000");
 			BufferedReader br = new BufferedReader(new FileReader(output));
 			String line = br.readLine();
-			double cost = 0, m0 = 0, m1 = 0, m2 = 0, m3 = 0, b = 0;
+			double cost = -1.0;
 			while (line != null) {
 				String[] split = line.split("\t");
 				double parsed = Double.parseDouble(split[1]);
-				switch(split[0]) {
-					case "0":
-						m0 = parsed;
-						break;
-					case "1":
-						m1 = parsed;
-						break;
-					case "2":
-						m2 = parsed;
-						break;
-                    case "3":
-                        m3 = parsed;
-                        break;
-                    case "4":
-                        b = parsed;
-                    case "5":
-                        cost = parsed;
+				int index = Integer.parseInt(split[0]);
+				if (index >= MultiGradientVector.DEPENDENTS) {
+					cost = parsed;
+				} else {
+					params.vals[index] = parsed;
 				}
 
 				line = br.readLine();
@@ -112,28 +96,20 @@ public class MultiGradientDriver extends Configured implements Tool {
 			br.close();
 			
 			if (prev_cost != -1.0 && cost > prev_cost) {
-				learning_rate = learning_rate/2.0;
+				learning_rate = learning_rate / 5.0;
 			} else if (cost < prev_cost) {
 				learning_rate = learning_rate * 1.25;
 			}
 			prev_cost = cost;
 
 			// calculate new parameters on learning rate
-            double new_m0 = Double.parseDouble(conf.get("m0")) - learning_rate * (m0);
-			double new_m1 = Double.parseDouble(conf.get("m1")) - learning_rate * (m1);
-            double new_m2 = Double.parseDouble(conf.get("m2")) - learning_rate * (m2);
-            double new_m3 = Double.parseDouble(conf.get("m3")) - learning_rate * (m3);
-			double new_b = Double.parseDouble(conf.get("b")) - learning_rate * b;
+            params.updateParams(conf, learning_rate);
 
 			// update parameters
-			conf.set("m0", "" + new_m0);
-			conf.set("m1", "" + new_m1);
-			conf.set("m2", "" + new_m2);
-			conf.set("m3", "" + new_m3);
-			conf.set("b", "" + new_b);
+			params.writeToConfiguration(conf);
 
 			// write to output file
-			String writeOutput = String.format("Cost: %f\n\tm0: %f\n\tm1: %f\n\tm2: %f\n\tm3: %f\n\tb: %f\n", cost, m0, m1, m2, m3, b);
+			String writeOutput = String.format("Cost: %f\nParams:\n%s\n", cost, params.toString());
  
 			if (bw == null) {
 				results = new File(args[1] + "/finalOutputTask3");
@@ -149,7 +125,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			terminate = checkTerminate(new double[]{new_m0, new_m1, new_m2, new_m3, new_b}, new double[]{m0, m1, m2, m3, b});
+			//terminate = checkTerminate(new double[]{new_m0, new_m1, new_m2, new_m3, new_b}, new double[]{m0, m1, m2, m3, b});
 		}
 
 		bw.close();
