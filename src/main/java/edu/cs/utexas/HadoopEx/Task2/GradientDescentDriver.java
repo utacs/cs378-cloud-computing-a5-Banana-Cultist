@@ -20,8 +20,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.cs.utexas.HadoopEx.Task3.MultiGradientDriver;
-
 public class GradientDescentDriver extends Configured implements Tool {
 
 	/**
@@ -52,7 +50,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 		double prev_cost = -1.0;
 		boolean terminate = false;
 
-		while (num_iter < max_iters) {
+		while (!terminate && num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "GradientDescent");
 
@@ -133,7 +131,9 @@ public class GradientDescentDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			//terminate = MultiGradientDriver.checkTerminate(new double[]{new_m, new_b}, new double[]{m, b});
+			if (prev_cost != -1.0 && Math.abs(cost - prev_cost)/prev_cost < 0.05) {
+				terminate = true;
+			}
 		}
 
 		bw.close();

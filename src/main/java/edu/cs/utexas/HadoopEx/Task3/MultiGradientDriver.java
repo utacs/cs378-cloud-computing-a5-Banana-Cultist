@@ -49,9 +49,9 @@ public class MultiGradientDriver extends Configured implements Tool {
 		int num_iter = 1;
 		double learning_rate = 0.001;
 		double prev_cost = -1.0;
-		//boolean terminate = false;
+		boolean terminate = false;
 
-		while (num_iter < max_iters) {
+		while (!terminate && num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "MultiGradient");
 
@@ -125,7 +125,9 @@ public class MultiGradientDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			//terminate = checkTerminate(new double[]{new_m0, new_m1, new_m2, new_m3, new_b}, new double[]{m0, m1, m2, m3, b});
+			if (prev_cost != -1.0 && Math.abs(cost - prev_cost)/prev_cost < 0.05) {
+				terminate = true;
+			}
 		}
 
 		bw.close();

@@ -1,9 +1,16 @@
 package edu.cs.utexas.HadoopEx.Task1;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.PrintWriter;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.*;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -11,7 +18,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import java.io.*;
 
 
 public class LinearRegressionDriver extends Configured implements Tool {
@@ -49,7 +55,7 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			m = (sums[4]*sums[2] - sums[0]*sums[1]) / (sums[4]*sums[3] - sums[0]*sums[0]);
 			b = (sums[3]*sums[1] - sums[0]*sums[2]) / (sums[4]*sums[3] - sums[0]*sums[0]);
 		
-			File results = new File(args[1] + "/" + args[2]);
+			File results = new File(args[1] + "/task1Output");
 			PrintWriter pw = new PrintWriter(results);
 
 			pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));
