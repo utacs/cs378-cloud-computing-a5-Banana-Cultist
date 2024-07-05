@@ -1,5 +1,11 @@
 package edu.cs.utexas.HadoopEx.Task2;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -14,13 +20,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-
+import edu.cs.utexas.HadoopEx.Task3.MultiGradientDriver;
 
 public class GradientDescentDriver extends Configured implements Tool {
 
@@ -49,8 +49,10 @@ public class GradientDescentDriver extends Configured implements Tool {
 		int max_iters = 100;
 		int num_iter = 1;
 		double learning_rate = 0.001;
+		double prev_cost = -1.0;
+		boolean terminate = false;
 
-		while (num_iter < max_iters) {
+		while (!terminate && num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "GradientDescent");
 
@@ -99,19 +101,26 @@ public class GradientDescentDriver extends Configured implements Tool {
 			}
 			br.close();
 
+			if (prev_cost != -1.0 && cost > prev_cost) {
+				learning_rate = learning_rate/2.0;
+			} else if (cost < prev_cost) {
+				learning_rate = learning_rate * 1.25;
+			}
+			prev_cost = cost;
+
 			// calculate new parameters on learning rate
-			m = Double.parseDouble(conf.get("m")) - learning_rate * m;
-			b = Double.parseDouble(conf.get("b")) - learning_rate * b;
+			double new_m = Double.parseDouble(conf.get("m")) - learning_rate * m;
+			double new_b = Double.parseDouble(conf.get("b")) - learning_rate * b;
 
 			// update parameters
-			conf.set("m", "" + m);
-			conf.set("b", "" + b);
+			conf.set("m", "" + new_m);
+			conf.set("b", "" + new_b);
 
 			// write to output file
 			String writeOutput = String.format("Cost: %f\n\tm: %f\n\tb: %f\n", cost, m, b);
 
 			if (bw == null) {
-				results = new File(args[1] + "/" + args[2]);
+				results = new File(args[1] + "/finalOutputTask2");
 				bw = new BufferedWriter(new FileWriter(results));
 			}
 
@@ -124,10 +133,10 @@ public class GradientDescentDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
+			terminate = MultiGradientDriver.checkTerminate(new double[]{new_m, new_b}, new double[]{m, b});
 		}
 
 		bw.close();
 		return 1;
 	}
 }
-

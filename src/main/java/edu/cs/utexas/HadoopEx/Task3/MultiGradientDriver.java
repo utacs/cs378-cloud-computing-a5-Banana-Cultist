@@ -51,8 +51,10 @@ public class MultiGradientDriver extends Configured implements Tool {
 		int max_iters = 100;
 		int num_iter = 1;
 		double learning_rate = 0.001;
+		double prev_cost = -1.0;
+		boolean terminate = false;
 
-		while (num_iter < max_iters) {
+		while (!terminate && num_iter < max_iters) {
 			// Reset job configurations for each iteration
 			Job job = Job.getInstance(conf, "MultiGradient");
 
@@ -87,7 +89,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 				double parsed = Double.parseDouble(split[1]);
 				switch(split[0]) {
 					case "0":
-						m1 = parsed;
+						m0 = parsed;
 						break;
 					case "1":
 						m1 = parsed;
@@ -107,26 +109,33 @@ public class MultiGradientDriver extends Configured implements Tool {
 				line = br.readLine();
 			}
 			br.close();
+			
+			if (prev_cost != -1.0 && cost > prev_cost) {
+				learning_rate = learning_rate/2.0;
+			} else if (cost < prev_cost) {
+				learning_rate = learning_rate * 1.25;
+			}
+			prev_cost = cost;
 
 			// calculate new parameters on learning rate
-            m0 = Double.parseDouble(conf.get("m0")) - learning_rate * m0;
-			m1 = Double.parseDouble(conf.get("m1")) - learning_rate * m1;
-            m2 = Double.parseDouble(conf.get("m2")) - learning_rate * m2;
-            m3 = Double.parseDouble(conf.get("m3")) - learning_rate * m3;
-			b = Double.parseDouble(conf.get("b")) - learning_rate * b;
+            double new_m0 = Double.parseDouble(conf.get("m0")) - learning_rate * (m0);
+			double new_m1 = Double.parseDouble(conf.get("m1")) - learning_rate * (m1);
+            double new_m2 = Double.parseDouble(conf.get("m2")) - learning_rate * (m2);
+            double new_m3 = Double.parseDouble(conf.get("m3")) - learning_rate * (m3);
+			double new_b = Double.parseDouble(conf.get("b")) - learning_rate * b;
 
 			// update parameters
-			conf.set("m0", "" + m0);
-			conf.set("m1", "" + m1);
-			conf.set("m2", "" + m2);
-			conf.set("m3", "" + m3);
-			conf.set("b", "" + b);
+			conf.set("m0", "" + new_m0);
+			conf.set("m1", "" + new_m1);
+			conf.set("m2", "" + new_m2);
+			conf.set("m3", "" + new_m3);
+			conf.set("b", "" + new_b);
 
 			// write to output file
-			String writeOutput = String.format("Cost: %f\n\tm: %f\n\tb: %f\n", cost, m0, m1, m2, m3, b);
-
+			String writeOutput = String.format("Cost: %f\n\tm0: %f\n\tm1: %f\n\tm2: %f\n\tm3: %f\n\tb: %f\n", cost, m0, m1, m2, m3, b);
+ 
 			if (bw == null) {
-				results = new File(args[1] + "/" + args[2]);
+				results = new File(args[1] + "/finalOutputTask3");
 				bw = new BufferedWriter(new FileWriter(results));
 			}
 
@@ -139,10 +148,20 @@ public class MultiGradientDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
+			terminate = checkTerminate(new double[]{new_m0, new_m1, new_m2, new_m3, new_b}, new double[]{m0, m1, m2, m3, b});
 		}
 
 		bw.close();
 		return 1;
 	}
-}
 
+	//check precision
+	public static boolean checkTerminate(double[] new_vals, double[] old_vals) {
+		for (int i = 0; i < new_vals.length;  ++i) {
+			if (Math.abs(new_vals[i] - old_vals[i]) <= 0.000001) {
+				return true;
+			}
+		}
+		return false;
+	}
+}

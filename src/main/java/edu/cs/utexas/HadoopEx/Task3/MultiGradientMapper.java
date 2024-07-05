@@ -8,16 +8,15 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import edu.cs.utexas.HadoopEx.Task1.LinearRegressionMapper;
-
 public class MultiGradientMapper extends Mapper<Object, Text, IntWritable, DoubleWritable> {
 
 	public void map(Object key, Text value, Context context) 
 			throws IOException, InterruptedException {
 
 		String[] columns = value.toString().split(",");
-		if (LinearRegressionMapper.clean(columns)) {
-			Float x0 = Float.parseFloat(columns[4]);
+		if (this.clean(columns)) {
+			//change from duration-in-seconds to duration-in-minutes
+			Float x0 = Float.parseFloat(columns[4])/60;
             Float x1 = Float.parseFloat(columns[5]);
             Float x2 = Float.parseFloat(columns[11]);
             Float x3 = Float.parseFloat(columns[15]);
@@ -53,5 +52,37 @@ public class MultiGradientMapper extends Mapper<Object, Text, IntWritable, Doubl
 			// write cost to index 5
 			context.write(new IntWritable(5), new DoubleWritable(cost));
 		}
+	}
+
+	public static boolean clean(String[] columns) {
+		if (columns.length != 17) return false;
+
+		try {
+			int duration = Integer.parseInt(columns[4]);
+			if (duration < 2 * 60 || duration > 60 * 60) {
+				return false;
+			}
+
+			float fareAmount = Float.parseFloat(columns[11]);
+			if (fareAmount < 3.00f || fareAmount > 200.00f) {
+				return false;
+			}
+
+			float tripDistance = Float.parseFloat(columns[5]);
+			if (tripDistance < 1.00f || tripDistance > 50.00f) {
+				return false;
+			}
+
+			float tollAmount = Float.parseFloat(columns[15]);
+			if (tollAmount < 3.00f) {
+				return false;
+			}
+
+			float totalAmount = Float.parseFloat(columns[16]);
+		} catch (NumberFormatException e) {
+			return false;
+		}
+
+		return true;
 	}
 }
