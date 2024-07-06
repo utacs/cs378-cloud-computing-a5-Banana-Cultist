@@ -1,13 +1,10 @@
 package edu.cs.utexas.HadoopEx.Task2;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.List;
 
-import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -21,6 +18,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+
+import edu.cs.utexas.HadoopEx.JobReader;
 
 public class GradientDescentDriver extends Configured implements Tool {
 
@@ -101,7 +100,6 @@ public class GradientDescentDriver extends Configured implements Tool {
 			} else if (cost < prev_cost) {
 				learning_rate = learning_rate * 1.25;
 			}
-			prev_cost = cost;
 
 			// calculate new parameters on learning rate
 			double new_m = Double.parseDouble(conf.get("m")) - learning_rate * m;
@@ -116,6 +114,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 
 			if (bw == null) {
 				results = new File(args[1] + "/finalOutputTask2");
+				results.createNewFile();
 				bw = new BufferedWriter(new FileWriter(results));
 			}
 
@@ -131,6 +130,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			if (prev_cost != -1.0 && Math.abs(cost - prev_cost)/prev_cost < 0.05) {
 				terminate = true;
 			}
+			prev_cost = cost;
 		}
 
 		bw.close();

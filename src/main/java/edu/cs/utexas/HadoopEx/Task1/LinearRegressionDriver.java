@@ -1,16 +1,12 @@
 package edu.cs.utexas.HadoopEx.Task1;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -22,6 +18,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+
+import edu.cs.utexas.HadoopEx.JobReader;
 
 
 public class LinearRegressionDriver extends Configured implements Tool {
@@ -61,6 +59,7 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			System.out.println(Arrays.toString(sums));
 		
 			File results = new File(args[1] + "/task1Output");
+			results.createNewFile();
 			PrintWriter pw = new PrintWriter(results);
 
 			pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));

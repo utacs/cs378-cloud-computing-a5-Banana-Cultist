@@ -110,6 +110,7 @@ public class MultiGradientDriver extends Configured implements Tool {
  
 			if (bw == null) {
 				results = new File(args[1] + "/finalOutputTask3");
+				results.createNewFile();
 				bw = new BufferedWriter(new FileWriter(results));
 			}
 
