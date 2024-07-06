@@ -5,7 +5,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.List;
 
+import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -76,11 +78,9 @@ public class GradientDescentDriver extends Configured implements Tool {
 			job.waitForCompletion(false);
 
 			// read job output
-			File output = new File(outPath + "/part-r-00000");
-			BufferedReader br = new BufferedReader(new FileReader(output));
-			String line = br.readLine();
+			List<String> lines = JobReader.getJobOutput(outPath.toString());
 			double cost = 0, m = 0, b = 0;
-			while (line != null) {
+			for (String line : lines) {
 				String[] split = line.split("\t");
 				double parsed = Double.parseDouble(split[1]);
 				switch(split[0]) {
@@ -94,10 +94,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 						cost = parsed;
 						break;
 				}
-
-				line = br.readLine();
 			}
-			br.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate/5.0;

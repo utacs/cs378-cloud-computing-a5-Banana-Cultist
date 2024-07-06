@@ -5,7 +5,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.List;
 
+import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -77,11 +79,9 @@ public class MultiGradientDriver extends Configured implements Tool {
 			job.waitForCompletion(false);
 
 			// read job output
-			File output = new File(outPath + "/part-r-00000");
-			BufferedReader br = new BufferedReader(new FileReader(output));
-			String line = br.readLine();
+			List<String> lines = JobReader.getJobOutput(outPath.toString());
 			double cost = -1.0;
-			while (line != null) {
+			for (String line : lines) {
 				String[] split = line.split("\t");
 				double parsed = Double.parseDouble(split[1]);
 				int index = Integer.parseInt(split[0]);
@@ -90,11 +90,8 @@ public class MultiGradientDriver extends Configured implements Tool {
 				} else {
 					params.vals[index] = parsed;
 				}
-
-				line = br.readLine();
 			}
-			br.close();
-			
+
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate / 5.0;
 			} else if (cost < prev_cost) {
@@ -109,7 +106,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 			params.writeToConfiguration(conf);
 
 			// write to output file
-			String writeOutput = String.format("Cost: %f\nParams:\n%s\n", cost, params.toString());
+			String writeOutput = String.format("Cost: %f\nParams:\n%s\n", cost, params);
  
 			if (bw == null) {
 				results = new File(args[1] + "/finalOutputTask3");

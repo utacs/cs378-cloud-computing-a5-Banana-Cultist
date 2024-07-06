@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
+import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
@@ -29,14 +33,13 @@ public class LinearRegressionDriver extends Configured implements Tool {
 	 */
 
 	public static void main(String[] args) throws Exception {
+		System.out.println(Arrays.toString(args));
 		int res = ToolRunner.run(new Configuration(), new LinearRegressionDriver(), args);
 
 		if (res == 0) {
-			File output = new File(args[1] + "/part-r-00000");
 			double[] sums = new double[5];
-			BufferedReader br = new BufferedReader(new FileReader(output));
-			String line;
-			while ((line = br.readLine()) != null) {
+			List<String> lines = JobReader.getJobOutput(args[1]);
+			for(String line : lines) {
 				String[] split = line.split("\t");
 				sums[Integer.parseInt(split[0])] = Double.parseDouble(split[1]);
 			}
@@ -54,6 +57,8 @@ public class LinearRegressionDriver extends Configured implements Tool {
 
 			m = (sums[4]*sums[2] - sums[0]*sums[1]) / (sums[4]*sums[3] - sums[0]*sums[0]);
 			b = (sums[3]*sums[1] - sums[0]*sums[2]) / (sums[4]*sums[3] - sums[0]*sums[0]);
+
+			System.out.println(Arrays.toString(sums));
 		
 			File results = new File(args[1] + "/task1Output");
 			PrintWriter pw = new PrintWriter(results);
@@ -61,7 +66,6 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));
 
 			pw.close();
-			br.close();
 		}
 
 		System.exit(res);
@@ -70,7 +74,7 @@ public class LinearRegressionDriver extends Configured implements Tool {
 	/**
 	 * 
 	 */
-	public int run(String args[]) {
+	public int run(String[] args) {
 		try {
 			Configuration conf = new Configuration();
 
