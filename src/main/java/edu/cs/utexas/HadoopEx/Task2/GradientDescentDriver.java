@@ -1,25 +1,19 @@
 package edu.cs.utexas.HadoopEx.Task2;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
-import edu.cs.utexas.HadoopEx.JobReader;
 
 public class GradientDescentDriver extends Configured implements Tool {
 
@@ -42,8 +36,8 @@ public class GradientDescentDriver extends Configured implements Tool {
 		conf.set("m", "0");
 		conf.set("b", "0");
 
-		File results = null;
-		BufferedWriter bw = null;
+		//File results = null;
+		//BufferedWriter bw = null;
 
 		int max_iters = 100;
 		int num_iter = 1;
@@ -73,27 +67,47 @@ public class GradientDescentDriver extends Configured implements Tool {
 
 			Path outPath = new Path(args[1] + '/' + num_iter);
 			FileOutputFormat.setOutputPath(job, outPath);
-			job.setOutputFormatClass(TextOutputFormat.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
 
 			// read job output
-			List<String> lines = JobReader.getJobOutput(outPath.toString());
+			//List<String> lines = JobReader.getJobOutput(outPath.toString());
 			double cost = 0, m = 0, b = 0;
-			for (String line : lines) {
-				String[] split = line.split("\t");
-				double parsed = Double.parseDouble(split[1]);
-				switch(split[0]) {
-					case "0":
-						m = parsed;
+			// for (String line : lines) {
+			// 	String[] split = line.split("\t");
+			// 	double parsed = Double.parseDouble(split[1]);
+			// 	switch(split[0]) {
+			// 		case "0":
+			// 			m = parsed;
+			// 			break;
+			// 		case "1":
+			// 			b = parsed;
+			// 			break;
+			// 		case "2":
+			// 			cost = parsed;
+			// 			break;
+			// 	}
+			// }
+
+			Path path = new Path(args[1] + "/part-r-00000");
+			conf.addResource(path);
+			FileSystem fs = FileSystem.get(conf);
+			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
+			IntWritable key = new IntWritable();
+			DoubleWritable val = new DoubleWritable();
+			while (reader.next(key, val)) {
+				switch(key.get()) {
+					case 0:
+						m = val.get();
 						break;
-					case "1":
-						b = parsed;
+					case 1:
+						b = val.get();
 						break;
-					case "2":
-						cost = parsed;
-						break;
+					case 2:
+						cost = val.get();
 				}
 			}
+			reader.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate/5.0;
@@ -112,14 +126,14 @@ public class GradientDescentDriver extends Configured implements Tool {
 			// write to output file
 			String writeOutput = String.format("Cost: %f\n\tm: %f\n\tb: %f\n", cost, m, b);
 
-			if (bw == null) {
-				results = new File(args[1] + "/finalOutputTask2");
-				results.createNewFile();
-				bw = new BufferedWriter(new FileWriter(results));
-			}
+			// if (bw == null) {
+			// 	results = new File(args[1] + "/finalOutputTask2");
+			// 	results.createNewFile();
+			// 	bw = new BufferedWriter(new FileWriter(results));
+			// }
 
-			bw.write(writeOutput);
-			bw.flush();
+			// bw.write(writeOutput);
+			// bw.flush();
 
 			// delete output directory (for cleanliness)
 			FileSystem.get(outPath.toUri(), job.getConfiguration()).delete(outPath, true);
@@ -133,7 +147,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			prev_cost = cost;
 		}
 
-		bw.close();
+		//bw.close();
 		return 1;
 	}
 }

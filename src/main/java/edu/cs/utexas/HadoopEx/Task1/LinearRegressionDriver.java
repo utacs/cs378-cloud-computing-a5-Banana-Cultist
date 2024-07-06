@@ -1,23 +1,20 @@
 package edu.cs.utexas.HadoopEx.Task1;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.io.FilenameFilter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -42,30 +39,48 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			// 	String[] split = line.split("\t");
 			// 	sums[Integer.parseInt(split[0])] = Double.parseDouble(split[1]);
 			// }
-			File temp = new File(args[1]);
-			File[] directory = temp.listFiles(new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					return !name.toLowerCase().endsWith(".crc");
-				}
-			});
-			List<String> lines = new ArrayList<String>();
-			if (directory != null) {
-				for (File output : directory) {
-					for (String line : Files.readString(output.toPath()).split("\\R")) {
-						lines.add(line);
-					}
-				}
-				for (String line : lines) {
-					int index;
-					try {
-						String[] lineSplit = line.split("\\s+");
-						index = Integer.parseInt(lineSplit[0]);
-						sums[index] = Double.parseDouble(lineSplit[1]);
-					} catch (NumberFormatException e) {
-					}
-				}
-			}
+			// File temp = new File(args[1]);
+			// File[] directory = temp.listFiles(new FilenameFilter() {
+			// 	public boolean accept(File dir, String name) {
+			// 		return !name.toLowerCase().endsWith(".crc");
+			// 	}
+			// });
+			// List<String> lines = new ArrayList<String>();
+			// System.out.println("Before directory");
+			// if (directory != null) {
+			// 	System.out.println("Made it to directory");
+			// 	for (File output : directory) {
+			// 		for (String line : Files.readString(output.toPath()).split("\\R")) {
+			// 			System.out.println("LINE: " + line);
+			// 			lines.add(line);
+			// 		}
+			// 	}
+			// 	System.out.println("lines length: " + lines.size());
+			// 	for (String line : lines) {
+			// 		int index;
+			// 		try {
+			// 			String[] lineSplit = line.split("\\s+");
+			// 			System.out.println("First part of line looks like: " + lineSplit[0] + " THAT");
+			// 			System.out.println("Second part of line looks like: " + lineSplit[1] + " THIS");
+			// 			index = Integer.parseInt(lineSplit[0]);
+			// 			System.out.println("parsed int");
+			// 			sums[index] = Double.parseDouble(lineSplit[1]);
+			// 			System.out.println("parsed double");
+			// 		} catch (NumberFormatException e) {
+			// 		}
+			// 	}
+			// }
 			
+			Path path = new Path(args[1] + "/part-r-00000");
+			config.addResource(path);
+			FileSystem fs = FileSystem.get(config);
+			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, config);
+			IntWritable key = new IntWritable();
+			DoubleWritable val = new DoubleWritable();
+			while (reader.next(key, val)) {
+				sums[key.get()] = val.get();
+			}
+			reader.close();
 
 			double m;
 			double b;
@@ -112,6 +127,7 @@ public class LinearRegressionDriver extends Configured implements Tool {
 
 			// specify a Reducer
 			job.setReducerClass(LinearRegressionReducer.class);
+			job.setNumReduceTasks(1);
 
 			// specify output types
 			job.setOutputKeyClass(IntWritable.class);
@@ -125,7 +141,7 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			
 			Path outputPath = new Path(args[1]);
 			FileOutputFormat.setOutputPath(job, outputPath);
-			job.setOutputFormatClass(TextOutputFormat.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 			
 			

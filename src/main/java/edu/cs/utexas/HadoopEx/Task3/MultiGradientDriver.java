@@ -1,19 +1,12 @@
 package edu.cs.utexas.HadoopEx.Task3;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.List;
-
-import edu.cs.utexas.HadoopEx.JobReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -44,8 +37,8 @@ public class MultiGradientDriver extends Configured implements Tool {
 		MultiGradientVector params = new MultiGradientVector(0.1);
 		params.writeToConfiguration(conf);
 
-		File results = null;
-		BufferedWriter bw = null;
+		// File results = null;
+		// BufferedWriter bw = null;
 
 		int max_iters = 100;
 		int num_iter = 1;
@@ -79,18 +72,33 @@ public class MultiGradientDriver extends Configured implements Tool {
 			job.waitForCompletion(false);
 
 			// read job output
-			List<String> lines = JobReader.getJobOutput(outPath.toString());
-			double cost = -1.0;
-			for (String line : lines) {
-				String[] split = line.split("\t");
-				double parsed = Double.parseDouble(split[1]);
-				int index = Integer.parseInt(split[0]);
-				if (index >= MultiGradientVector.DEPENDENTS) {
-					cost = parsed;
+			// List<String> lines = JobReader.getJobOutput(outPath.toString());
+			 double cost = -1.0;
+			// for (String line : lines) {
+			// 	String[] split = line.split("\t");
+			// 	double parsed = Double.parseDouble(split[1]);
+			// 	int index = Integer.parseInt(split[0]);
+			// 	if (index >= MultiGradientVector.DEPENDENTS) {
+			// 		cost = parsed;
+			// 	} else {
+			// 		params.vals[index] = parsed;
+			// 	}
+			// }
+
+			Path path = new Path(args[1] + "/part-r-00000");
+			conf.addResource(path);
+			FileSystem fs = FileSystem.get(conf);
+			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
+			IntWritable key = new IntWritable();
+			DoubleWritable val = new DoubleWritable();
+			while (reader.next(key, val)) {
+				if (key.get() >= MultiGradientVector.DEPENDENTS) {
+					cost = val.get();
 				} else {
-					params.vals[index] = parsed;
+					params.vals[key.get()] = val.get();
 				}
 			}
+			reader.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate / 5.0;
@@ -108,14 +116,14 @@ public class MultiGradientDriver extends Configured implements Tool {
 			// write to output file
 			String writeOutput = String.format("Cost: %f\nParams:\n%s\n", cost, params);
  
-			if (bw == null) {
-				results = new File(args[1] + "/finalOutputTask3");
-				results.createNewFile();
-				bw = new BufferedWriter(new FileWriter(results));
-			}
+			// if (bw == null) {
+			// 	results = new File(args[1] + "/finalOutputTask3");
+			// 	results.createNewFile();
+			// 	bw = new BufferedWriter(new FileWriter(results));
+			// }
 
-			bw.write(writeOutput);
-			bw.flush();
+			// bw.write(writeOutput);
+			// bw.flush();
 
 			// delete output directory (for cleanliness)
 			FileSystem.get(outPath.toUri(), job.getConfiguration()).delete(outPath, true);
@@ -128,7 +136,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 			}
 		}
 
-		bw.close();
+		//bw.close();
 		return 1;
 	}
 
