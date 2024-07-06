@@ -1,7 +1,7 @@
 package edu.cs.utexas.HadoopEx.Task1;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,8 +19,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.cs.utexas.HadoopEx.JobReader;
-
 
 public class LinearRegressionDriver extends Configured implements Tool {
 
@@ -32,15 +30,35 @@ public class LinearRegressionDriver extends Configured implements Tool {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println(Arrays.toString(args));
-		int res = ToolRunner.run(new Configuration(), new LinearRegressionDriver(), args);
+		Configuration config = new Configuration();
+		int res = ToolRunner.run(config, new LinearRegressionDriver(), args);
 
 		if (res == 0) {
 			double[] sums = new double[5];
-			List<String> lines = JobReader.getJobOutput(args[1]);
-			for(String line : lines) {
-				String[] split = line.split("\t");
-				sums[Integer.parseInt(split[0])] = Double.parseDouble(split[1]);
+			// List<String> lines = JobReader.getJobOutput(args[1]);
+			// for(String line : lines) {
+			// 	String[] split = line.split("\t");
+			// 	sums[Integer.parseInt(split[0])] = Double.parseDouble(split[1]);
+			// }
+			File temp = new File(args[1]);
+			File[] directory = temp.listFiles();
+			List<String> lines = new ArrayList<String>();
+			if (directory != null) {
+				for (File output : directory) {
+					for (String line : output.toString().split("\\R")) {
+						lines.add(line);
+					}
+				}
+				for (String line : lines) {
+					int index;
+					try {
+						index = Integer.parseInt(line.substring(0, 1));
+						sums[index] = Double.parseDouble(line.substring(1, line.length()));
+					} catch (NumberFormatException e) {
+					}
+				}
 			}
+			
 
 			double m;
 			double b;
@@ -57,14 +75,16 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			b = (sums[3]*sums[1] - sums[0]*sums[2]) / (sums[4]*sums[3] - sums[0]*sums[0]);
 
 			System.out.println(Arrays.toString(sums));
-		
-			File results = new File(args[1] + "/task1Output");
-			results.createNewFile();
-			PrintWriter pw = new PrintWriter(results);
+			System.out.println("Slope: " + m);
+			System.out.println("Intercept: " + b);
 
-			pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));
+			// File results = new File(args[1] + "/task1Output");
+			// results.createNewFile();
+			// PrintWriter pw = new PrintWriter(results);
 
-			pw.close();
+			// pw.write(String.format("Parameters:\n\tm: %f\n\tb: %f\n", m, b));
+
+			//pw.close();
 		}
 
 		System.exit(res);
@@ -95,9 +115,12 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			// specify input and output directories
 			FileInputFormat.addInputPath(job, new Path(args[0]));
 			job.setInputFormatClass(TextInputFormat.class);
-
-			FileOutputFormat.setOutputPath(job, new Path(args[1]));
+			
+			Path outputPath = new Path(args[1]);
+			FileOutputFormat.setOutputPath(job, outputPath);
 			job.setOutputFormatClass(TextOutputFormat.class);
+
+			
 			
 			return (job.waitForCompletion(true) ? 0 : 1);
 		} catch (Exception e) {
