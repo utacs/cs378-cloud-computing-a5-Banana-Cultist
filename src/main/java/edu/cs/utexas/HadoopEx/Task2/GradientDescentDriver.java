@@ -65,7 +65,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			FileInputFormat.addInputPath(job, new Path(args[0]));
 			job.setInputFormatClass(TextInputFormat.class);
 
-			Path outPath = new Path(args[1] + '/' + num_iter);
+			Path outPath = new Path(args[1]);
 			FileOutputFormat.setOutputPath(job, outPath);
 			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
@@ -90,7 +90,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			// }
 
 			Path path = new Path(args[1] + "/part-r-00000");
-			conf.addResource(path);
+			//conf.addResource(path);
 			FileSystem fs = FileSystem.get(conf);
 			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
 			IntWritable key = new IntWritable();
@@ -141,7 +141,7 @@ public class GradientDescentDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			if (prev_cost != -1.0 && Math.abs(cost - prev_cost)/prev_cost < 0.05) {
+			if (prev_cost != -1.0 && Math.abs(cost - prev_cost) < 100.0) {
 				terminate = true;
 			}
 			prev_cost = cost;

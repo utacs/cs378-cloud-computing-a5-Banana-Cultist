@@ -12,6 +12,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -66,9 +67,9 @@ public class MultiGradientDriver extends Configured implements Tool {
 			FileInputFormat.addInputPath(job, new Path(args[0]));
 			job.setInputFormatClass(TextInputFormat.class);
 
-			Path outPath = new Path(args[1] + '/' + num_iter);
+			Path outPath = new Path(args[1]);
 			FileOutputFormat.setOutputPath(job, outPath);
-			job.setOutputFormatClass(TextOutputFormat.class);
+			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
 
 			// read job output
@@ -86,7 +87,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 			// }
 
 			Path path = new Path(args[1] + "/part-r-00000");
-			conf.addResource(path);
+			//conf.addResource(path);
 			FileSystem fs = FileSystem.get(conf);
 			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
 			IntWritable key = new IntWritable();
@@ -105,7 +106,6 @@ public class MultiGradientDriver extends Configured implements Tool {
 			} else if (cost < prev_cost) {
 				learning_rate = learning_rate * 1.25;
 			}
-			prev_cost = cost;
 
 			// calculate new parameters on learning rate
             params.updateParams(conf, learning_rate);
@@ -131,9 +131,10 @@ public class MultiGradientDriver extends Configured implements Tool {
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
 			num_iter++;
-			if (prev_cost != -1.0 && Math.abs(cost - prev_cost)/prev_cost < 0.05) {
+			if (prev_cost != -1.0 && Math.abs(cost - prev_cost) < 100) {
 				terminate = true;
 			}
+			prev_cost = cost;
 		}
 
 		//bw.close();
