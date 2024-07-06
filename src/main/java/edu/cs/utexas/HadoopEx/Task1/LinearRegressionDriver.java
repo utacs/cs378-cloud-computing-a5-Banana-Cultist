@@ -1,9 +1,11 @@
 package edu.cs.utexas.HadoopEx.Task1;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.FilenameFilter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -41,19 +43,24 @@ public class LinearRegressionDriver extends Configured implements Tool {
 			// 	sums[Integer.parseInt(split[0])] = Double.parseDouble(split[1]);
 			// }
 			File temp = new File(args[1]);
-			File[] directory = temp.listFiles();
+			File[] directory = temp.listFiles(new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					return !name.toLowerCase().endsWith(".crc");
+				}
+			});
 			List<String> lines = new ArrayList<String>();
 			if (directory != null) {
 				for (File output : directory) {
-					for (String line : output.toString().split("\\R")) {
+					for (String line : Files.readString(output.toPath()).split("\\R")) {
 						lines.add(line);
 					}
 				}
 				for (String line : lines) {
 					int index;
 					try {
-						index = Integer.parseInt(line.substring(0, 1));
-						sums[index] = Double.parseDouble(line.substring(1, line.length()));
+						String[] lineSplit = line.split("\\s+");
+						index = Integer.parseInt(lineSplit[0]);
+						sums[index] = Double.parseDouble(lineSplit[1]);
 					} catch (NumberFormatException e) {
 					}
 				}
