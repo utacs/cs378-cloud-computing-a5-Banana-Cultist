@@ -47,7 +47,9 @@ public class GradientDescentDriver extends Configured implements Tool {
 
 		while (!terminate && num_iter < max_iters) {
 			// Reset job configurations for each iteration
+			//System.out.println("Start of iteration " + num_iter);
 			Job job = Job.getInstance(conf, "GradientDescent");
+			//System.out.println("Job created");
 
 			job.setJarByClass(GradientDescentDriver.class);
 
@@ -64,9 +66,11 @@ public class GradientDescentDriver extends Configured implements Tool {
 			// specify input and output directories
 			FileInputFormat.addInputPath(job, new Path(args[0]));
 			job.setInputFormatClass(TextInputFormat.class);
-
+			//System.out.println("Before outpath");
 			Path outPath = new Path(args[1]);
+			//System.out.println("Before outpath set");
 			FileOutputFormat.setOutputPath(job, outPath);
+			//System.out.println("After outpath set");
 			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
 
@@ -89,25 +93,34 @@ public class GradientDescentDriver extends Configured implements Tool {
 			// 	}
 			// }
 
-			Path path = new Path(args[1] + "/part-r-00000");
-			//conf.addResource(path);
-			FileSystem fs = FileSystem.get(conf);
-			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
-			IntWritable key = new IntWritable();
-			DoubleWritable val = new DoubleWritable();
-			while (reader.next(key, val)) {
-				switch(key.get()) {
-					case 0:
-						m = val.get();
-						break;
-					case 1:
-						b = val.get();
-						break;
-					case 2:
-						cost = val.get();
+			//System.out.println("Before for loop");
+			for (int i = 0; i < 3; ++i) {
+				//System.out.println("i is: " + i);
+				Path path = new Path(args[1] + "/part-r-0000" + i);
+				//conf.addResource(path);
+				//System.out.println("Before file system");
+				FileSystem fs = FileSystem.get(conf);
+				//System.out.println("Before SR of iteration");
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
+				IntWritable key = new IntWritable();
+				DoubleWritable val = new DoubleWritable();
+				//System.out.println("Before while");
+				while (reader.next(key, val)) {
+					//System.out.println(("Key is: " + key.get()));
+					switch(key.get()) {
+						case 0:
+							m = val.get();
+							break;
+						case 1:
+							b = val.get();
+							break;
+						case 2:
+							cost = val.get();
+							break;
+					}
 				}
+				reader.close();
 			}
-			reader.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate/5.0;
@@ -136,7 +149,9 @@ public class GradientDescentDriver extends Configured implements Tool {
 			// bw.flush();
 
 			// delete output directory (for cleanliness)
+			//System.out.println("Before Delete");
 			FileSystem.get(outPath.toUri(), job.getConfiguration()).delete(outPath, true);
+			//System.out.println("After Delete");
 
 			System.out.println("Iteration: " + num_iter);
 			System.out.println(writeOutput);
@@ -145,9 +160,10 @@ public class GradientDescentDriver extends Configured implements Tool {
 				terminate = true;
 			}
 			prev_cost = cost;
+			//System.out.println("End of job");
 		}
 
 		//bw.close();
-		return 1;
+		return 0;
 	}
 }

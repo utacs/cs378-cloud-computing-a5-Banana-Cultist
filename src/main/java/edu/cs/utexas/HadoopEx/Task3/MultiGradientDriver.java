@@ -11,7 +11,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -86,20 +85,24 @@ public class MultiGradientDriver extends Configured implements Tool {
 			// 	}
 			// }
 
-			Path path = new Path(args[1] + "/part-r-00000");
-			//conf.addResource(path);
-			FileSystem fs = FileSystem.get(conf);
-			SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
-			IntWritable key = new IntWritable();
-			DoubleWritable val = new DoubleWritable();
-			while (reader.next(key, val)) {
-				if (key.get() >= MultiGradientVector.DEPENDENTS) {
-					cost = val.get();
-				} else {
-					params.vals[key.get()] = val.get();
+			for (int i = 0; i <= 2; ++i) {
+				//System.out.println("i is: " + i);
+				Path path = new Path(args[1] + "/part-r-0000" + i);
+				//conf.addResource(path);
+				FileSystem fs = FileSystem.get(conf);
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
+				IntWritable key = new IntWritable();
+				DoubleWritable val = new DoubleWritable();
+				while (reader.next(key, val)) {
+					//System.out.println("KEY: " + key.get() + ", VAL: " + val.get());
+					if (key.get() >= MultiGradientVector.DEPENDENTS) {
+						cost = val.get();
+					} else {
+						params.vals[key.get()] = val.get();
+					}
 				}
+				reader.close();
 			}
-			reader.close();
 
 			if (prev_cost != -1.0 && cost > prev_cost) {
 				learning_rate = learning_rate / 5.0;
@@ -138,7 +141,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 		}
 
 		//bw.close();
-		return 1;
+		return 0;
 	}
 
 	//check precision

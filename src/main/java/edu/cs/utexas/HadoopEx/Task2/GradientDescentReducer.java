@@ -1,11 +1,10 @@
 package edu.cs.utexas.HadoopEx.Task2;
 
+import java.io.IOException;
+
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
-
-
-import java.io.IOException;
 
 
 public class GradientDescentReducer extends  Reducer<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
@@ -21,6 +20,7 @@ public class GradientDescentReducer extends  Reducer<IntWritable, DoubleWritable
         if (index.get() < 2) {
             sum = 2 * sum / N;
         }
+        //System.out.println("From Reducer: Index is " + index.get());
         context.write(index, new DoubleWritable(sum));
     }
 }
