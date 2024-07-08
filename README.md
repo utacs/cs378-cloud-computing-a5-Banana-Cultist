@@ -27,6 +27,20 @@
 
 
 # Add your Project REPORT HERE 
+YARN history
+![Screenshot (48)](https://github.com/utacs/cs378-cloud-computing-a5-Banana-Cultist/assets/98183466/5f948159-4f30-4f38-b227-a6a7e91a1c4e)
+
+Machines
+![Screenshot (47)](https://github.com/utacs/cs378-cloud-computing-a5-Banana-Cultist/assets/98183466/051c5b70-f6d5-4f52-89a1-01375a9ce129)
+
+Task1
+![Screenshot (50)](https://github.com/utacs/cs378-cloud-computing-a5-Banana-Cultist/assets/98183466/f7b6d155-309f-4909-b021-04800ae27193)
+
+Task2
+![Screenshot (49)](https://github.com/utacs/cs378-cloud-computing-a5-Banana-Cultist/assets/98183466/2186e0b3-26e1-48fb-aa58-4bcf72f5e206)
+
+Task3
+![Screenshot (44)](https://github.com/utacs/cs378-cloud-computing-a5-Banana-Cultist/assets/98183466/2c53752c-5759-4774-ba75-4d38f1f040a4)
 
 
 # Project Template
