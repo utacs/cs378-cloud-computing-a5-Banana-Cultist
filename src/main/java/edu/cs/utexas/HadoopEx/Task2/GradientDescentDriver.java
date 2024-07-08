@@ -36,9 +36,6 @@ public class GradientDescentDriver extends Configured implements Tool {
 		conf.set("m", "0");
 		conf.set("b", "0");
 
-		//File results = null;
-		//BufferedWriter bw = null;
-
 		int max_iters = 100;
 		int num_iter = 1;
 		double learning_rate = 0.001;
@@ -74,26 +71,8 @@ public class GradientDescentDriver extends Configured implements Tool {
 			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
 
-			// read job output
-			//List<String> lines = JobReader.getJobOutput(outPath.toString());
 			double cost = 0, m = 0, b = 0;
-			// for (String line : lines) {
-			// 	String[] split = line.split("\t");
-			// 	double parsed = Double.parseDouble(split[1]);
-			// 	switch(split[0]) {
-			// 		case "0":
-			// 			m = parsed;
-			// 			break;
-			// 		case "1":
-			// 			b = parsed;
-			// 			break;
-			// 		case "2":
-			// 			cost = parsed;
-			// 			break;
-			// 	}
-			// }
 
-			//System.out.println("Before for loop");
 			for (int i = 0; i < 3; ++i) {
 				//System.out.println("i is: " + i);
 				Path path = new Path(args[1] + "/part-r-0000" + i);
@@ -138,15 +117,6 @@ public class GradientDescentDriver extends Configured implements Tool {
 
 			// write to output file
 			String writeOutput = String.format("Cost: %f\n\tm: %f\n\tb: %f\n", cost, m, b);
-
-			// if (bw == null) {
-			// 	results = new File(args[1] + "/finalOutputTask2");
-			// 	results.createNewFile();
-			// 	bw = new BufferedWriter(new FileWriter(results));
-			// }
-
-			// bw.write(writeOutput);
-			// bw.flush();
 
 			// delete output directory (for cleanliness)
 			//System.out.println("Before Delete");

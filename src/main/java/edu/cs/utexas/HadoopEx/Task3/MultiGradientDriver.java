@@ -37,9 +37,6 @@ public class MultiGradientDriver extends Configured implements Tool {
 		MultiGradientVector params = new MultiGradientVector(0.1);
 		params.writeToConfiguration(conf);
 
-		// File results = null;
-		// BufferedWriter bw = null;
-
 		int max_iters = 100;
 		int num_iter = 1;
 		double learning_rate = 0.001;
@@ -71,19 +68,7 @@ public class MultiGradientDriver extends Configured implements Tool {
 			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.waitForCompletion(false);
 
-			// read job output
-			// List<String> lines = JobReader.getJobOutput(outPath.toString());
-			 double cost = -1.0;
-			// for (String line : lines) {
-			// 	String[] split = line.split("\t");
-			// 	double parsed = Double.parseDouble(split[1]);
-			// 	int index = Integer.parseInt(split[0]);
-			// 	if (index >= MultiGradientVector.DEPENDENTS) {
-			// 		cost = parsed;
-			// 	} else {
-			// 		params.vals[index] = parsed;
-			// 	}
-			// }
+			double cost = -1.0;
 
 			for (int i = 0; i <= 2; ++i) {
 				//System.out.println("i is: " + i);
@@ -119,14 +104,6 @@ public class MultiGradientDriver extends Configured implements Tool {
 			// write to output file
 			String writeOutput = String.format("Cost: %f\nParams:\n%s\n", cost, params);
  
-			// if (bw == null) {
-			// 	results = new File(args[1] + "/finalOutputTask3");
-			// 	results.createNewFile();
-			// 	bw = new BufferedWriter(new FileWriter(results));
-			// }
-
-			// bw.write(writeOutput);
-			// bw.flush();
 
 			// delete output directory (for cleanliness)
 			FileSystem.get(outPath.toUri(), job.getConfiguration()).delete(outPath, true);

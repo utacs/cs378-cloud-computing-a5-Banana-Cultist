@@ -46,7 +46,7 @@ The java main class is:
 
 edu.cs.utexas.HadoopEx.WordCount 
 
-Input file:  Book-Tiny.txt  
+Input file:  taxi-data-sorted-large.csv
 
 Specify your own Output directory like 
 
@@ -68,7 +68,7 @@ Inside your shell with Hadoop
 
 Running as Java Application:
 
-```java -jar target/MapReduce-WordCount-example-0.1-SNAPSHOT-jar-with-dependencies.jar SOME-Text-Fiel.txt  output``` 
+```java -jar target/MapReduce-WordCount-example-0.1-SNAPSHOT-jar-with-dependencies.jar SOME-Text-Fiel.txt  Task output``` 
 
 Or has hadoop application
 
